@@ -82,7 +82,9 @@ where d.maker = m.maker
     and m.price = 4 * t.price
     and stuff(v.model, 3, 1, '') = stuff(o.model, 3, 1, '')
     and k.speed = m.speed and k.hd = d.hd and k.ram = o.ram and k.price = v.price
-    
+
+
+
  4. Посчитать сумму цифр в номере каждой модели из таблицы Product
 Вывод: номер модели, сумма цифр
 Для этой задачи запрещено использовать: CTE
@@ -97,3 +99,21 @@ select model,
        + (len(replace(model, '8', '**')) - len(model)) * 8
        + (len(replace(model, '9', '**')) - len(model)) * 9
 from product
+
+
+35.В таблице Product найти модели, которые состоят только из цифр или только из латинских букв (A-Z, без учета регистра).
+Вывод: номер модели, тип модели.
+
+SELECT model, type FROM Product
+WHERE model not like '%[^0-9]%' OR upper(model) not  like '%[^A-Z]%'
+
+30.В предположении, что приход и расход денег на каждом пункте приема фиксируется произвольное число раз (первичным ключом в таблицах является столбец code), требуется получить таблицу, в которой каждому пункту за каждую дату выполнения операций будет соответствовать одна строка.
+Вывод: point, date, суммарный расход пункта за день (out), суммарный приход пункта за день (inc). Отсутствующие значения считать неопределенными (NULL).
+
+SELECT COALESCE(I.point, O.point) as point,COALESCE(I.date, O.date) as date
+,out,inc FROM (select point,date,sum(inc) as inc from income 
+group by point,date)  AS I
+FULL JOIN (select point,date,sum(out) as out from outcome
+group by point,date)  AS O ON I.point=O.point
+AND I.date=O.date
+

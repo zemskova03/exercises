@@ -1,23 +1,28 @@
-задачи с сайта sql-ex
+пару задач с сайта sql-ex, которые ,как мне кажется, являются интересными
 51.Найдите названия кораблей, имеющих наибольшее число орудий среди всех имеющихся кораблей такого же водоизмещения (учесть корабли из таблицы Outcomes).
 
-Select country, cast(avg((power(bore,3)/2)) as numeric(6,2)) as weight
-from (select country, classes.class, bore, name from classes left join ships on classes.class=ships.class
+Select country, cast(avg((power(bore,3)/2)) as numeric(6,2))  from
+(select country, classes.class, bore, name from classes left join ships on classes.class=ships.class
 union all
 select distinct country, class, bore, ship from classes t1 left join outcomes t2 on t1.class=t2.ship
 where ship=class and ship not in (select name from ships) ) a
-where name IS NOT NULL group by country
+where name is not null 
+group by country
 
 
 32.Одной из характеристик корабля является половина куба калибра его главных орудий (mw).
 С точностью до 2 десятичных знаков определите среднее значение mw для кораблей каждой страны, у которой есть корабли в базе данных.
 
-Select country, cast(avg((power(bore,3)/2)) as numeric(6,2)) as weight
-from (select country, classes.class, bore, name from classes left join ships on classes.class=ships.class
-union all
-select distinct country, class, bore, ship from classes t1 left join outcomes t2 on t1.class=t2.ship
-where ship=class and ship not in (select name from ships) ) a
-where name IS NOT NULL group by country
+WITH a AS 
+(SELECT C.country, C.class, S.name, POWER(C.bore, 3)/2 as b  FROM Classes AS C 
+	 INNER JOIN Ships AS S ON C.class=S.class
+	 UNION 
+SELECT C.country, C.class, O.ship, POWER(C.bore, 3)/2 as b FROM Classes AS C 
+	  INNER JOIN Outcomes AS O ON C.class=O.ship)
+SELECT country, CAST(AVG(b) AS numeric(10,2))
+FROM a
+GROUP BY country;
+
 
 66.Для всех дней в интервале с 01/04/2003 по 07/04/2003 определить число рейсов из Rostov с пассажирами на борту.
 Вывод: дата, количество рейсов.
@@ -117,3 +122,11 @@ FULL JOIN (select point,date,sum(out) as out from outcome
 group by point,date)  AS O ON I.point=O.point
 AND I.date=O.date
 
+39.Найдите корабли, `сохранившиеся для будущих сражений`; т.е. выведенные из строя в одной битве (damaged), они участвовали в другой, произошедшей позже.
+
+select distinct ship from outcomes out
+inner join Battles b1 on b1.name=battle
+where result='damaged' and 
+exists (select ship from outcomes
+inner join Battles b2 on b2.name=battle
+where b1.date<b2.date and ship=out.ship )
